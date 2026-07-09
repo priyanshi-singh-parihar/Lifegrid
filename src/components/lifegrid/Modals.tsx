@@ -119,3 +119,39 @@ export function EmergencyModal({ open, onClose }: { open: boolean; onClose: () =
     </Backdrop>
   );
 }
+
+export function UserProfileModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { user } = useStore();
+  if (!open || !user) return null;
+  return (
+    <Backdrop onClose={onClose}>
+      <div className="bg-card rounded-2xl shadow-lg border border-border p-6 text-center">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-display text-xl font-bold">My Profile</h2>
+          <button onClick={onClose} className="text-text-secondary hover:text-foreground" aria-label="Close">
+            <i className="fa-solid fa-xmark text-lg" />
+          </button>
+        </div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-20 w-20 rounded-full bg-primary text-white grid place-items-center font-bold text-3xl shadow-sm">
+            {user.name.charAt(0).toUpperCase()}
+          </div>
+          <h3 className="font-display text-2xl font-bold text-foreground mt-2">{user.name}</h3>
+          <p className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wide">
+            {user.role === "patient" ? "Verified Patient" : user.role}
+          </p>
+          <div className="w-full mt-6 space-y-4 text-left border-t border-border pt-4">
+            <div>
+              <span className="text-xs text-text-secondary uppercase font-semibold">Email Address</span>
+              <p className="text-foreground font-medium mt-0.5">{user.email}</p>
+            </div>
+            <div>
+              <span className="text-xs text-text-secondary uppercase font-semibold">Contact Number</span>
+              <p className="text-foreground font-medium mt-0.5">{user.phone || "Not provided"}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Backdrop>
+  );
+}

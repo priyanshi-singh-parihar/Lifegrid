@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useStore, useTheme } from "@/lib/lifegrid-store";
-import { LoginModal, NotificationsModal, EmergencyModal } from "./Modals";
+import { LoginModal, NotificationsModal, EmergencyModal, UserProfileModal } from "./Modals";
 
 export function Navbar({ onEmergency }: { onEmergency?: () => void }) {
   const { theme, toggle } = useTheme();
@@ -13,6 +13,7 @@ export function Navbar({ onEmergency }: { onEmergency?: () => void }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [emergencyOpen, setEmergencyOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -98,17 +99,29 @@ export function Navbar({ onEmergency }: { onEmergency?: () => void }) {
                     Language: English
                   </button>
                   {user && (
-                    <button
-                      onClick={() => {
-                        logout();
-                        setMenuOpen(false);
-                        navigate({ to: "/" });
-                      }}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-bg-secondary text-danger"
-                    >
-                      <i className="fa-solid fa-right-from-bracket w-4" />
-                      Logout
-                    </button>
+                    <>
+                      <button
+                        onClick={() => {
+                          setProfileOpen(true);
+                          setMenuOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-bg-secondary text-foreground"
+                      >
+                        <i className="fa-solid fa-user w-4" />
+                        My Profile
+                      </button>
+                      <button
+                        onClick={() => {
+                          logout();
+                          setMenuOpen(false);
+                          navigate({ to: "/" });
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-bg-secondary text-danger"
+                      >
+                        <i className="fa-solid fa-right-from-bracket w-4" />
+                        Logout
+                      </button>
+                    </>
                   )}
                 </div>
               )}
@@ -116,9 +129,13 @@ export function Navbar({ onEmergency }: { onEmergency?: () => void }) {
 
             {user ? (
               <div className="hidden sm:flex items-center gap-2 pl-2">
-                <div className="h-9 w-9 rounded-full bg-primary text-white grid place-items-center font-bold text-sm">
+                <button
+                  onClick={() => setProfileOpen(true)}
+                  className="h-9 w-9 rounded-full bg-primary text-white grid place-items-center font-bold text-sm lift-hover"
+                  aria-label="User profile"
+                >
                   {user.name.charAt(0).toUpperCase()}
-                </div>
+                </button>
               </div>
             ) : (
               <button
@@ -170,6 +187,7 @@ export function Navbar({ onEmergency }: { onEmergency?: () => void }) {
       <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
       <NotificationsModal open={notifOpen} onClose={() => setNotifOpen(false)} />
       <EmergencyModal open={emergencyOpen} onClose={() => setEmergencyOpen(false)} />
+      <UserProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
     </>
   );
 }

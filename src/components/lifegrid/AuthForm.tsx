@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { HOSPITALS } from "@/lib/lifegrid-data";
 import { useStore, type AppUser } from "@/lib/lifegrid-store";
 
 type Role = "patient";
@@ -24,13 +23,33 @@ function passwordScore(pw: string): { score: number; label: string; color: strin
   return { score: s, label: labels[idx], color: colors[idx] };
 }
 
+const getUsers = (): any[] => {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem("lg_registered_users");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
 
+const saveUser = (u: any) => {
+  if (typeof window === "undefined") return;
+  try {
+    const list = getUsers();
+    list.push(u);
+    window.localStorage.setItem("lg_registered_users", JSON.stringify(list));
+  } catch {}
+};
 
 export function AuthForm({ onSuccess }: { onSuccess?: () => void }) {
   const { setUser } = useStore();
-  const [role, setRole] = useState<Role>("patient");
+  const role: Role = "patient";
+  const [isSignUp, setIsSignUp] = useState(false);
   const [otpMode, setOtpMode] = useState(false);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phoneNum, setPhoneNum] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [phone, setPhone] = useState("");
@@ -38,18 +57,18 @@ export function AuthForm({ onSuccess }: { onSuccess?: () => void }) {
   const [loading, setLoading] = useState(false);
   const pwStrength = useMemo(() => passwordScore(password), [password]);
 
-  const login = (name: string, identifier: string, extra?: Partial<AppUser>) => {
+  const login = (nameVal: string, identifier: string, extra?: Partial<AppUser>) => {
     setLoading(true);
     setTimeout(() => {
       const u: AppUser = {
         id: `u_${Date.now()}`,
-        name,
+        name: nameVal,
         email: identifier,
-        role,
+        role: "patient",
         ...extra,
       };
       setUser(u);
-      toast.success(`Welcome back, ${name}!`);
+      toast.success(`Welcome back, ${nameVal}!`);
       setLoading(false);
       onSuccess?.();
     }, 700);
@@ -57,15 +76,60 @@ export function AuthForm({ onSuccess }: { onSuccess?: () => void }) {
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (otpMode) {
-      const code = otp.join("");
-      if (code.length < 4) return toast.error("Enter the 4-digit OTP");
-      login(phone || "Patient", phone);
+    if (isSignUp) {
+      if (!name.trim() || !email.trim() || !phoneNum.trim() || !password) {
+        return toast.error("Please fill in all fields to create an account");
+      }
+      const users = getUsers();
+      if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
+        return toast.error("An account with this email already exists");
+      }
+      setLoading(true);
+      setTimeout(() => {
+        const newUser = {
+          name,
+          email,
+          phone: phoneNum,
+          password,
+        };
+        saveUser(newUser);
+        const appUser: AppUser = {
+          id: `u_${Date.now()}`,
+          name,
+          email,
+          phone: phoneNum,
+          role: "patient",
+        };
+        setUser(appUser);
+        toast.success(`Account created! Welcome, ${name}!`);
+        setLoading(false);
+        onSuccess?.();
+      }, 700);
     } else {
-      if (!email || !password) return toast.error("Enter both fields");
-
-      const name = email.split("@")[0] || "Patient";
-      login(name, email);
+      if (otpMode) {
+        const code = otp.join("");
+        if (code.length < 4) return toast.error("Enter the 4-digit OTP");
+        const users = getUsers();
+        const existing = users.find((u) => u.phone === phone);
+        const nameVal = existing ? existing.name : "Patient";
+        const emailVal = existing ? existing.email : `${phone}@lifegrid.dev`;
+        login(nameVal, emailVal, { phone });
+      } else {
+        if (!email || !password) return toast.error("Enter both fields");
+        const users = getUsers();
+        const existing = users.find(
+          (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+        );
+        if (existing) {
+          login(existing.name, existing.email, { phone: existing.phone });
+        } else {
+          if (email === "google@lifegrid.dev" || email.toLowerCase() === "google@lifegrid.dev") {
+            login("Google User", "google@lifegrid.dev", { phone: "+91 99999 99999" });
+          } else {
+            return toast.error("Invalid email or password. Please check your credentials or Sign Up.");
+          }
+        }
+      }
     }
   };
 
@@ -92,10 +156,74 @@ export function AuthForm({ onSuccess }: { onSuccess?: () => void }) {
 
   return (
     <div className="w-full">
-
-
-      <form onSubmit={submit} className="space-y-4 fade-in" key={`${role}-${otpMode}`}>
-        {role === "patient" && otpMode ? (
+      <form onSubmit={submit} className="space-y-4 fade-in" key={`${isSignUp}-${otpMode}`}>
+        {isSignUp ? (
+          <>
+            <label className="block text-sm">
+              <span className="text-text-secondary">Full Name</span>
+              <input
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your Full Name"
+                className="mt-1 w-full h-11 px-3 rounded-lg border border-border bg-background outline-none focus:border-primary"
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="text-text-secondary">Email</span>
+              <input
+                required
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="mt-1 w-full h-11 px-3 rounded-lg border border-border bg-background outline-none focus:border-primary"
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="text-text-secondary">Contact Number</span>
+              <input
+                required
+                value={phoneNum}
+                onChange={(e) => setPhoneNum(e.target.value)}
+                placeholder="+91 98765 43210"
+                className="mt-1 w-full h-11 px-3 rounded-lg border border-border bg-background outline-none focus:border-primary"
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="text-text-secondary">Password</span>
+              <div className="relative mt-1">
+                <input
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  type={showPw ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="w-full h-11 px-3 pr-10 rounded-lg border border-border bg-background outline-none focus:border-primary"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary"
+                  aria-label="Toggle visibility"
+                >
+                  <i className={`fa-solid ${showPw ? "fa-eye-slash" : "fa-eye"}`} />
+                </button>
+              </div>
+              {password && (
+                <div className="mt-2">
+                  <div className="h-1.5 rounded-full bg-bg-tertiary overflow-hidden">
+                    <div
+                      className={`h-full transition-all ${pwStrength.color}`}
+                      style={{ width: `${(pwStrength.score / 5) * 100}%` }}
+                    />
+                  </div>
+                  <div className="text-xs mt-1 text-text-secondary">Strength: {pwStrength.label}</div>
+                </div>
+              )}
+            </label>
+          </>
+        ) : otpMode ? (
           <>
             <label className="block text-sm">
               <span className="text-text-secondary">Phone number</span>
@@ -126,9 +254,7 @@ export function AuthForm({ onSuccess }: { onSuccess?: () => void }) {
         ) : (
           <>
             <label className="block text-sm">
-              <span className="text-text-secondary">
-                Email
-              </span>
+              <span className="text-text-secondary">Email</span>
               <input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -156,7 +282,7 @@ export function AuthForm({ onSuccess }: { onSuccess?: () => void }) {
                   <i className={`fa-solid ${showPw ? "fa-eye-slash" : "fa-eye"}`} />
                 </button>
               </div>
-              {role === "patient" && password && (
+              {password && (
                 <div className="mt-2">
                   <div className="h-1.5 rounded-full bg-bg-tertiary overflow-hidden">
                     <div
@@ -168,15 +294,13 @@ export function AuthForm({ onSuccess }: { onSuccess?: () => void }) {
                 </div>
               )}
             </label>
-            {role === "patient" && (
-              <button
-                type="button"
-                onClick={forgot}
-                className="text-xs text-primary font-semibold hover:underline"
-              >
-                Forgot password?
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={forgot}
+              className="text-xs text-primary font-semibold hover:underline"
+            >
+              Forgot password?
+            </button>
           </>
         )}
 
@@ -186,10 +310,10 @@ export function AuthForm({ onSuccess }: { onSuccess?: () => void }) {
           className="w-full h-11 rounded-[30px] bg-primary text-white font-semibold lift-hover disabled:opacity-60 flex items-center justify-center gap-2"
         >
           {loading && <i className="fa-solid fa-spinner fa-spin" />}
-          {loading ? "Signing in…" : "Sign In"}
+          {loading ? (isSignUp ? "Creating account…" : "Signing in…") : (isSignUp ? "Create Account" : "Sign In")}
         </button>
 
-        {role === "patient" && (
+        {!isSignUp && (
           <button
             type="button"
             onClick={() => setOtpMode((v) => !v)}
@@ -199,20 +323,35 @@ export function AuthForm({ onSuccess }: { onSuccess?: () => void }) {
           </button>
         )}
 
-        <div className="flex items-center gap-3 my-2">
-          <div className="flex-1 h-px bg-border" />
-          <span className="text-xs text-text-light">or</span>
-          <div className="flex-1 h-px bg-border" />
-        </div>
-
         <button
           type="button"
-          onClick={() => login("Google User", "google@lifegrid.dev")}
-          className="w-full h-11 rounded-[30px] border border-border font-semibold flex items-center justify-center gap-2 hover:bg-bg-secondary"
+          onClick={() => {
+            setIsSignUp((v) => !v);
+            setOtpMode(false);
+          }}
+          className="w-full text-sm text-primary font-semibold"
         >
-          <i className="fa-brands fa-google text-[color:var(--secondary-color)]" />
-          Continue with Google
+          {isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}
         </button>
+
+        {!isSignUp && (
+          <>
+            <div className="flex items-center gap-3 my-2">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-xs text-text-light">or</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => login("Google User", "google@lifegrid.dev", { phone: "+91 99999 99999" })}
+              className="w-full h-11 rounded-[30px] border border-border font-semibold flex items-center justify-center gap-2 hover:bg-bg-secondary"
+            >
+              <i className="fa-brands fa-google text-[color:var(--secondary-color)]" />
+              Continue with Google
+            </button>
+          </>
+        )}
       </form>
     </div>
   );

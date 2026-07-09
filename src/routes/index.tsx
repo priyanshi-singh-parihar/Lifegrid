@@ -439,7 +439,7 @@ function HomePage() {
               const message = formData.get("message") as string;
 
               try {
-                await sendContactEmail({ name, email, message });
+                await sendContactEmail({ data: { name, email, message } });
                 toast.success("Message sent successfully! We will get back to you soon.");
                 (e.target as HTMLFormElement).reset();
               } catch (err: any) {
