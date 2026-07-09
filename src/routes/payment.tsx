@@ -85,12 +85,12 @@ function PaymentPage() {
       bedType: pendingBooking.bedType,
       amountPaid: pendingBooking.amount,
       paymentId: "pay_" + Math.random().toString(36).slice(2, 12),
-      status: "confirmed" as const,
+      status: "pending" as const,
       timestamp: booking.requestedAt,
     };
     setConfirmation(conf);
     setPendingBooking(null);
-    toast.success("Payment successful — booking confirmed instantly");
+    toast.success("Request sent - waiting for hospital confirmation");
     navigate({ to: "/confirmation" });
   };
 

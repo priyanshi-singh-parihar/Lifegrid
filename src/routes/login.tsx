@@ -49,6 +49,9 @@ function LoginPage() {
           <div className="mt-6 text-center text-xs text-text-secondary space-y-2">
             <p>Don't have an account? Contact us to register.</p>
             <div className="flex flex-col gap-1.5">
+              <Link to="/hospital-admin/login" className="text-primary font-semibold">
+                Hospital operator dashboard login
+              </Link>
               <Link to="/" className="text-primary font-semibold">
                 ← Back to LifeGrid
               </Link>

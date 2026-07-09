@@ -35,7 +35,7 @@ export function Footer() {
             <li><a href="#" className="hover:text-primary">Help center</a></li>
             <li><a href="#" className="hover:text-primary">Contact us</a></li>
             <li><a href="#" className="hover:text-primary">Partner hospitals</a></li>
-
+            <li><Link to="/hospital-admin/login" className="hover:text-primary">Hospital admin login</Link></li>
           </ul>
         </div>
         <div>

@@ -13,7 +13,9 @@ import { Route as PaymentRouteImport } from './routes/payment'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ConfirmationRouteImport } from './routes/confirmation'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as HospitalAdminIndexRouteImport } from './routes/hospital-admin.index'
 import { Route as HospitalIdRouteImport } from './routes/hospital.$id'
+import { Route as HospitalAdminLoginRouteImport } from './routes/hospital-admin.login'
 
 const PaymentRoute = PaymentRouteImport.update({
   id: '/payment',
@@ -35,9 +37,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HospitalAdminIndexRoute = HospitalAdminIndexRouteImport.update({
+  id: '/hospital-admin/',
+  path: '/hospital-admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HospitalIdRoute = HospitalIdRouteImport.update({
   id: '/hospital/$id',
   path: '/hospital/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HospitalAdminLoginRoute = HospitalAdminLoginRouteImport.update({
+  id: '/hospital-admin/login',
+  path: '/hospital-admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -46,14 +58,18 @@ export interface FileRoutesByFullPath {
   '/confirmation': typeof ConfirmationRoute
   '/login': typeof LoginRoute
   '/payment': typeof PaymentRoute
+  '/hospital-admin/login': typeof HospitalAdminLoginRoute
   '/hospital/$id': typeof HospitalIdRoute
+  '/hospital-admin/': typeof HospitalAdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/confirmation': typeof ConfirmationRoute
   '/login': typeof LoginRoute
   '/payment': typeof PaymentRoute
+  '/hospital-admin/login': typeof HospitalAdminLoginRoute
   '/hospital/$id': typeof HospitalIdRoute
+  '/hospital-admin': typeof HospitalAdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -61,15 +77,38 @@ export interface FileRoutesById {
   '/confirmation': typeof ConfirmationRoute
   '/login': typeof LoginRoute
   '/payment': typeof PaymentRoute
+  '/hospital-admin/login': typeof HospitalAdminLoginRoute
   '/hospital/$id': typeof HospitalIdRoute
+  '/hospital-admin/': typeof HospitalAdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/confirmation' | '/login' | '/payment' | '/hospital/$id'
+  fullPaths:
+    | '/'
+    | '/confirmation'
+    | '/login'
+    | '/payment'
+    | '/hospital-admin/login'
+    | '/hospital/$id'
+    | '/hospital-admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/confirmation' | '/login' | '/payment' | '/hospital/$id'
+  to:
+    | '/'
+    | '/confirmation'
+    | '/login'
+    | '/payment'
+    | '/hospital-admin/login'
+    | '/hospital/$id'
+    | '/hospital-admin'
   id:
-    '__root__' | '/' | '/confirmation' | '/login' | '/payment' | '/hospital/$id'
+    | '__root__'
+    | '/'
+    | '/confirmation'
+    | '/login'
+    | '/payment'
+    | '/hospital-admin/login'
+    | '/hospital/$id'
+    | '/hospital-admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,7 +116,9 @@ export interface RootRouteChildren {
   ConfirmationRoute: typeof ConfirmationRoute
   LoginRoute: typeof LoginRoute
   PaymentRoute: typeof PaymentRoute
+  HospitalAdminLoginRoute: typeof HospitalAdminLoginRoute
   HospitalIdRoute: typeof HospitalIdRoute
+  HospitalAdminIndexRoute: typeof HospitalAdminIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -110,11 +151,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/hospital-admin/': {
+      id: '/hospital-admin/'
+      path: '/hospital-admin'
+      fullPath: '/hospital-admin/'
+      preLoaderRoute: typeof HospitalAdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/hospital/$id': {
       id: '/hospital/$id'
       path: '/hospital/$id'
       fullPath: '/hospital/$id'
       preLoaderRoute: typeof HospitalIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hospital-admin/login': {
+      id: '/hospital-admin/login'
+      path: '/hospital-admin/login'
+      fullPath: '/hospital-admin/login'
+      preLoaderRoute: typeof HospitalAdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -125,7 +180,9 @@ const rootRouteChildren: RootRouteChildren = {
   ConfirmationRoute: ConfirmationRoute,
   LoginRoute: LoginRoute,
   PaymentRoute: PaymentRoute,
+  HospitalAdminLoginRoute: HospitalAdminLoginRoute,
   HospitalIdRoute: HospitalIdRoute,
+  HospitalAdminIndexRoute: HospitalAdminIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

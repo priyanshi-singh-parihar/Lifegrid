@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { BedType, Hospital, HospitalType } from "./lifegrid-data";
 import { HOSPITALS as SEED_HOSPITALS } from "./lifegrid-data";
+import { db } from "@/services/db";
 
 export interface AppUser {
   id: string;
@@ -150,17 +151,49 @@ export function LifeGridProvider({ children }: { children: ReactNode }) {
     setPendingBookingState(readLS<PendingBooking | null>("lg_pending", null));
     setConfirmationState(readLS<Confirmation | null>("lg_confirmation", null));
     setNotifications(readLS<Notification[]>("lg_notifications", seedNotifications()));
-    setBookings(readLS<Booking[]>("lg_bookings", []));
-    const savedHospitals = readLS<Hospital[] | null>("lg_hospitals", null);
-    if (savedHospitals && Array.isArray(savedHospitals) && savedHospitals.length) {
-      // Merge saved bed counts into seed so schema updates still land
-      setHospitals((cur) =>
-        cur.map((h) => {
-          const s = savedHospitals.find((x) => x.id === h.id);
-          return s ? { ...h, beds: { ...h.beds, ...s.beds } } : h;
-        }),
-      );
-    }
+
+    // Load hospitals from DB service
+    const dbHs = db.getHospitals();
+    setHospitals((cur) =>
+      cur.map((h) => {
+        const dbH = dbHs.find((x) => x.id === h.id);
+        if (dbH) {
+          return {
+            ...h,
+            beds: {
+              icu: dbH.availableBeds.icu,
+              oxygen: dbH.availableBeds.oxygen,
+              emergency: dbH.availableBeds.emergency,
+              ventilator: dbH.availableBeds.ventilator,
+              general: dbH.availableBeds.general,
+            }
+          };
+        }
+        return h;
+      })
+    );
+
+    // Load bookings from DB service
+    const dbBks = db.getBookings();
+    const mappedBks: Booking[] = dbBks.map((dbBk) => {
+      const h = SEED_HOSPITALS.find((x) => x.id === dbBk.hospitalId);
+      return {
+        id: dbBk.id,
+        hospitalId: dbBk.hospitalId,
+        hospitalName: h ? h.name : `Hospital ${dbBk.hospitalId}`,
+        hospitalType: h ? h.type : "private",
+        bedType: dbBk.bedType,
+        patientId: `pt_${dbBk.patientName}`,
+        patientName: dbBk.patientName,
+        patientContact: dbBk.contactInfo,
+        amount: dbBk.amount,
+        paymentStatus: dbBk.amount > 0 ? "paid" : "not-required",
+        status: dbBk.status,
+        requestedAt: dbBk.timestamp,
+        viewedByHospital: true,
+      };
+    });
+    setBookings(mappedBks);
   }, []);
 
   // Simulate live bed updates (only for hospitals with no pending admin activity)
@@ -175,7 +208,27 @@ export function LifeGridProvider({ children }: { children: ReactNode }) {
           beds[k] = Math.max(0, beds[k] + jitter);
           return { ...h, beds };
         });
-        writeLS("lg_hospitals", next);
+        
+        // Sync with mock database
+        const dbHs = db.getHospitals();
+        const updatedDbHs = dbHs.map((dbH) => {
+          const liveH = next.find((x) => x.id === dbH.id);
+          if (liveH) {
+            return {
+              ...dbH,
+              availableBeds: {
+                icu: liveH.beds.icu,
+                oxygen: liveH.beds.oxygen,
+                emergency: liveH.beds.emergency,
+                ventilator: liveH.beds.ventilator,
+                general: liveH.beds.general,
+              }
+            };
+          }
+          return dbH;
+        });
+        db.saveHospitals(updatedDbHs);
+
         return next;
       });
     }, 5000);
@@ -221,7 +274,9 @@ export function LifeGridProvider({ children }: { children: ReactNode }) {
           ? { ...h, beds: { ...h.beds, [bed]: Math.max(0, h.beds[bed] + delta) } }
           : h,
       );
-      writeLS("lg_hospitals", next);
+      
+      // Update Database
+      db.updateHospitalBeds(id, bed, delta);
       return next;
     });
   }, []);
@@ -233,25 +288,39 @@ export function LifeGridProvider({ children }: { children: ReactNode }) {
           ? { ...h, beds: { ...h.beds, [bed]: Math.max(0, Math.floor(count)) } }
           : h,
       );
-      writeLS("lg_hospitals", next);
+      
+      // Update Database
+      const dbHs = db.getHospitals();
+      const dbH = dbHs.find((x) => x.id === id);
+      if (dbH) {
+        dbH.availableBeds[bed] = Math.max(0, Math.floor(count));
+        db.saveHospitals(dbHs);
+      }
       return next;
     });
   }, []);
 
   const addBooking: Store["addBooking"] = useCallback((b) => {
+    // Add booking in Database
+    const dbBk = db.addBooking({
+      hospitalId: b.hospitalId,
+      patientName: b.patientName,
+      contactInfo: b.patientContact,
+      bedType: b.bedType,
+      amount: b.amount,
+      status: "pending",
+    });
+
     const booking: Booking = {
       ...b,
-      id:
-        "BK" +
-        Date.now().toString(36).toUpperCase() +
-        Math.random().toString(36).slice(2, 5).toUpperCase(),
-      status: "confirmed",
-      requestedAt: new Date().toISOString(),
+      id: dbBk.id,
+      status: "pending",
+      requestedAt: dbBk.timestamp,
       viewedByHospital: false,
     };
+
     setBookings((prev) => {
       const next = [booking, ...prev];
-      writeLS("lg_bookings", next);
       return next;
     });
     return booking;
@@ -271,9 +340,12 @@ export function LifeGridProvider({ children }: { children: ReactNode }) {
           };
           return updated;
         });
-        writeLS("lg_bookings", next);
         return next;
       });
+
+      // Update in database
+      db.updateBookingStatus(id, status);
+
       // If rejected, release the held bed back into inventory.
       if (updated && status === "rejected") {
         setHospitals((hs) => {
@@ -288,10 +360,12 @@ export function LifeGridProvider({ children }: { children: ReactNode }) {
                 }
               : h,
           );
-          writeLS("lg_hospitals", nxt);
           return nxt;
         });
+        // Release bed in DB
+        db.updateHospitalBeds(updated!.hospitalId, updated!.bedType, 1);
       }
+      
       // Keep the current patient's confirmation in sync if it matches.
       setConfirmationState((c) => {
         if (!c || c.bookingId !== id) return c;

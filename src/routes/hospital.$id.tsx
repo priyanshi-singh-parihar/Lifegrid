@@ -141,11 +141,11 @@ function HospitalDetails() {
           bedType: selected,
           amountPaid: 0,
           paymentId: null,
-          status: "confirmed",
+          status: "pending",
           timestamp: booking.requestedAt,
         });
         setPendingBooking(null);
-        toast.success("Booking confirmed instantly!");
+        toast.success("Request sent - waiting for hospital confirmation");
         setRequesting(false);
         navigate({ to: "/confirmation" });
       }, 500);
