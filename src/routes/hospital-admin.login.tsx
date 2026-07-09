@@ -1,4 +1,4 @@
-﻿import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { HOSPITALS } from "@/lib/lifegrid-data";
@@ -20,7 +20,11 @@ export const Route = createFileRoute("/hospital-admin/login")({
 function parseHospitalId(raw: string): number | null {
   const m = raw.trim().toUpperCase().match(/^HSP-?(\d+)$/);
   if (!m) return null;
-  return parseInt(m[1], 10);
+  const num = parseInt(m[1], 10);
+  if (num >= 1 && num <= 18) {
+    return num + 100;
+  }
+  return num;
 }
 
 function HospitalAdminLoginPage() {
@@ -45,7 +49,7 @@ function HospitalAdminLoginPage() {
     }
     const hid = parseHospitalId(hospitalIdInput);
     if (!hid) {
-      toast.error("Hospital ID must be in the form HSP-1");
+      toast.error("Hospital ID must be in the form HSP-101 or HSP-1");
       return;
     }
     const hospital = HOSPITALS.find((h) => h.id === hid);
@@ -134,7 +138,7 @@ function HospitalAdminLoginPage() {
         </div>
 
         <p className="mt-4 text-center text-xs text-text-light">
-          Demo tip: use any ID from HSP-1 to HSP-118 with any password.
+          Demo tip: use any ID from HSP-101 to HSP-118 (or HSP-1 to HSP-18) with any password.
         </p>
       </div>
     </div>
