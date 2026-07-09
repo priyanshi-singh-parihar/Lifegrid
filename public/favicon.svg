@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Background Grid -->
+  <g stroke="#00b894" stroke-width="4" stroke-opacity="0.12" stroke-dasharray="8 8">
+    <line x1="102.4" y1="0" x2="102.4" y2="512" />
+    <line x1="204.8" y1="0" x2="204.8" y2="512" />
+    <line x1="307.2" y1="0" x2="307.2" y2="512" />
+    <line x1="409.6" y1="0" x2="409.6" y2="512" />
+    
+    <line x1="0" y1="102.4" x2="512" y2="102.4" />
+    <line x1="0" y1="204.8" x2="512" y2="204.8" />
+    <line x1="0" y1="307.2" x2="512" y2="307.2" />
+    <line x1="0" y1="409.6" x2="512" y2="409.6" />
+  </g>
+
+  <!-- Medical Plus Motif in Background -->
+  <path d="M 206 140 h 100 v 66 h 66 v 100 h -66 v 66 h -100 v -66 h -66 v -100 h 66 z" fill="#00b894" fill-opacity="0.18" />
+
+  <!-- Heartbeat/Pulse Line -->
+  <path d="M 40 256 L 140 256 L 170 280 L 210 90 L 260 422 L 310 200 L 340 270 L 370 256 L 472 256" 
+        fill="none" 
+        stroke="#00b894" 
+        stroke-width="28" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" />
+</svg>

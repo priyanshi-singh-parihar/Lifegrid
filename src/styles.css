@@ -1,0 +1,190 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+/* ============================================================
+   LifeGrid Design System (exact spec)
+   ============================================================ */
+
+:root {
+  --primary-color: #00b894;
+  --primary-dark: #00a383;
+  --secondary-color: #0984e3;
+  --accent-color: #fdcb6e;
+  --emergency-color: #d63031;
+  --success-color: #00b894;
+  --warning-color: #fdcb6e;
+  --danger-color: #d63031;
+
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+
+  --text-primary: #2d3436;
+  --text-secondary: #636e72;
+  --text-light: #b2bec3;
+
+  --border-color: #dfe6e9;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+
+  --radius: 12px;
+  --radius-sm-token: 8px;
+  --radius-md-token: 12px;
+  --radius-lg-token: 16px;
+  --radius-xl-token: 30px;
+
+  --transition: all 0.3s ease;
+}
+
+[data-theme="dark"] {
+  --primary-color: #00cec9;
+  --primary-dark: #00b5b0;
+  --secondary-color: #74b9ff;
+  --accent-color: #ffeaa7;
+  --emergency-color: #ff7675;
+  --success-color: #55efc4;
+  --warning-color: #ffeaa7;
+  --danger-color: #ff7675;
+
+  --bg-primary: #1e272e;
+  --bg-secondary: #2d3436;
+  --bg-tertiary: #353b48;
+
+  --text-primary: #dfe6e9;
+  --text-secondary: #b2bec3;
+  --text-light: #636e72;
+
+  --border-color: #353b48;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.55);
+}
+
+@theme inline {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Playfair Display", ui-serif, Georgia, serif;
+
+  --color-primary: var(--primary-color);
+  --color-primary-foreground: #ffffff;
+  --color-primary-dark: var(--primary-dark);
+  --color-secondary: var(--secondary-color);
+  --color-secondary-foreground: #ffffff;
+  --color-accent: var(--accent-color);
+  --color-accent-foreground: #2d3436;
+  --color-emergency: var(--emergency-color);
+  --color-success: var(--success-color);
+  --color-warning: var(--warning-color);
+  --color-danger: var(--danger-color);
+
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-tertiary: var(--bg-tertiary);
+
+  --color-card: var(--bg-primary);
+  --color-card-foreground: var(--text-primary);
+  --color-popover: var(--bg-primary);
+  --color-popover-foreground: var(--text-primary);
+
+  --color-muted: var(--bg-secondary);
+  --color-muted-foreground: var(--text-secondary);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-light: var(--text-light);
+
+  --color-border: var(--border-color);
+  --color-input: var(--border-color);
+  --color-ring: var(--primary-color);
+  --color-destructive: var(--danger-color);
+  --color-destructive-foreground: #ffffff;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 30px;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+}
+
+/* ============================================================
+   Signature animations
+   ============================================================ */
+
+@keyframes lg-heartbeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+@keyframes lg-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; }
+}
+@keyframes lg-slide-up {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes lg-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes lg-slide-in {
+  from { transform: translateX(400px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@utility heartbeat {
+  animation: lg-heartbeat 2s ease-in-out infinite;
+  transform-origin: center;
+}
+@utility pulse-icon {
+  animation: lg-pulse 1.5s ease-in-out infinite;
+}
+@utility slide-up {
+  animation: lg-slide-up 0.5s ease both;
+}
+@utility fade-in {
+  animation: lg-fade-in 0.3s ease both;
+}
+@utility slide-in {
+  animation: lg-slide-in 0.3s ease both;
+}
+@utility lift-hover {
+  transition: var(--transition);
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+/* Emergency gradient band */
+@utility bg-emergency-gradient {
+  background: linear-gradient(135deg, rgba(214, 48, 49, 0.08), rgba(214, 48, 49, 0.02));
+  border: 1px solid rgba(214, 48, 49, 0.25);
+}
+
+@utility bg-hero-gradient {
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+}
